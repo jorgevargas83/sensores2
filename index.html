@@ -124,6 +124,10 @@
         <div id="rawDataDisplay">Esperando datos...</div>
     </div>
 
+    <!-- Firebase v8 (ligero y suficiente para Realtime DB) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
     <script>
         // ====== Estado / refs ======
         let port = null;
@@ -173,20 +177,58 @@
             }
         }
 
+        // =========================
+        //  A) Lectura desde Firebase
+        // =========================
+        (function initFirebase() {
+            const firebaseConfig = {
+                databaseURL: "https://sensores2-dec96-default-rtdb.firebaseio.com/"
+            };
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+
+            const ref = db.ref("telemetria/current");
+            statusElement.innerHTML = '<i class="fas fa-sync-alt"></i> Conectando a Firebase...';
+
+            ref.on("value", (snap) => {
+                const v = snap.val() || {};
+                // Actualizar tarjetas
+                if (v.temp != null) tempDataElement.textContent = Number(v.temp).toFixed(1);
+                if (v.dist_suav != null) distDataElement.textContent = String(v.dist_suav);
+                else if (v.dist != null) distDataElement.textContent = String(v.dist);
+                alertDataElement.textContent = v.alerta ?? '--';
+                alertDataElement.className = (/ALERTA/i.test(alertDataElement.textContent)) ? 'alerta' : 'ok';
+
+                // Historial de temperatura
+                if (v.temp != null) updateChart(Number(v.temp));
+
+                // Log crudo
+                const t = v.timestamp ? new Date(v.timestamp*1000).toLocaleTimeString() : new Date().toLocaleTimeString();
+                rawDataDisplay.textContent += `[Firebase ${t}] temp=${v.temp ?? '--'} dist=${v.dist_suav ?? v.dist ?? '--'} alerta=${v.alerta ?? '--'}\n`;
+                rawDataDisplay.scrollTop = rawDataDisplay.scrollHeight;
+
+                // Estado
+                statusElement.innerHTML = '<i class="fas fa-cloud"></i> Recibiendo datos desde Firebase.';
+            }, (err) => {
+                statusElement.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error Firebase: ' + err.message;
+            });
+        })();
+
+        // ======================================
+        //  B) (Opcional) Web Serial local (igual)
+        // ======================================
         connectButton.addEventListener('click', async () => {
             connectButton.disabled = true;
             try {
                 if (port) { await disconnect(); }
                 else      { await connect(); }
-            } finally {
-                connectButton.disabled = false;
-            }
+            } finally { connectButton.disabled = false; }
         });
 
         async function connect() {
             try {
                 if (!('serial' in navigator)) {
-                    statusElement.innerHTML = '<i class="fas fa-exclamation-circle"></i> Este navegador no soporta Web Serial. Usa Chrome, Edge u Opera.';
+                    statusElement.innerHTML = '<i class="fas fa-exclamation-circle"></i> Este navegador no soporta Web Serial. Usa Chrome/Edge.';
                     return;
                 }
                 port = await navigator.serial.requestPort();
@@ -194,7 +236,6 @@
                 setUIConnected(true);
                 readData().catch(err => console.error(err));
             } catch (error) {
-                // FIX: aquí antes faltaban comillas/backticks y rompía el JS
                 statusElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> Error: ${error.message}`;
                 setUIConnected(false);
                 port = null;
@@ -203,23 +244,13 @@
 
         async function disconnect() {
             try {
-                if (reader) {
-                    try { await reader.cancel(); } catch (_) {}
-                    reader.releaseLock(); // no es async
-                    reader = null;
-                }
-                if (port) {
-                    try { await port.close(); } catch (_) {}
-                    port = null;
-                }
-            } finally {
-                setUIConnected(false);
-            }
+                if (reader) { try { await reader.cancel(); } catch (_) {} reader.releaseLock(); reader = null; }
+                if (port)   { try { await port.close();  } catch (_) {} port = null; }
+            } finally { setUIConnected(false); }
         }
 
         async function readData() {
             const textDecoder = new TextDecoderStream();
-            // Conectar flujo del puerto al decodificador
             port.readable.pipeTo(textDecoder.writable).catch(() => {});
             reader = textDecoder.readable.getReader();
 
@@ -229,8 +260,7 @@
                 if (done) break;
                 if (value) {
                     buffer += value;
-                    const lines = buffer.split(/\r?\n/);
-                    buffer = lines.pop(); // posible línea incompleta
+                    const lines = buffer.split(/\r?\n/); buffer = lines.pop();
                     for (const lineRaw of lines) {
                         const line = lineRaw.trim();
                         if (!line) continue;
@@ -242,54 +272,34 @@
             }
         }
 
-        // Formato esperado (ejemplo):
-        // "25.00 C | 10 cm | ALERTA ACTIVA | Rojo:0, Verde:1"
         function processLine(line) {
             const parts = line.split('|').map(p => p.trim());
             if (parts.length >= 3) {
-                const tempStr = parts[0].replace('C', '').trim();
-                const distStr = parts[1].replace('cm', '').trim();
+                const tempStr = parts[0].replace('C','').trim();
+                const distStr = parts[1].replace('cm','').trim();
                 const alerta  = parts[2];
-
                 const temp = parseFloat(tempStr);
                 const dist = parseInt(distStr, 10);
 
-                if (!Number.isNaN(temp)) {
-                    tempDataElement.textContent = temp.toFixed(1);
-                    updateChart(temp);
-                } else {
-                    tempDataElement.textContent = '--';
-                }
-
-                if (!Number.isNaN(dist)) {
-                    distDataElement.textContent = String(dist);
-                } else {
-                    distDataElement.textContent = '--';
-                }
+                if (!Number.isNaN(temp)) { tempDataElement.textContent = temp.toFixed(1); updateChart(temp); }
+                else { tempDataElement.textContent = '--'; }
+                if (!Number.isNaN(dist)) distDataElement.textContent = String(dist);
+                else distDataElement.textContent = '--';
 
                 alertDataElement.textContent = alerta;
-                if (/ALERTA ACTIVA/i.test(alerta)) {
-                    alertDataElement.className = 'alerta';
-                } else {
-                    alertDataElement.className = 'ok';
-                }
+                alertDataElement.className = (/ALERTA ACTIVA/i.test(alerta)) ? 'alerta' : 'ok';
             }
         }
 
         function updateChart(newTemp) {
             const maxDataPoints = 20;
             const currentTime = new Date().toLocaleTimeString();
-
-            if (chartData.labels.length >= maxDataPoints) {
-                chartData.labels.shift();
-                chartData.datasets[0].data.shift();
-            }
+            if (chartData.labels.length >= maxDataPoints) { chartData.labels.shift(); chartData.datasets[0].data.shift(); }
             chartData.labels.push(currentTime);
             chartData.datasets[0].data.push(newTemp);
             if (tempChart) tempChart.update();
         }
 
-        // Desconexión física del dispositivo
         if ('serial' in navigator) {
             navigator.serial.addEventListener('disconnect', async () => {
                 await disconnect();
