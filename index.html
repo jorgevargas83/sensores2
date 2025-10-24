@@ -1,311 +1,119 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Monitor Arduino Elegante</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monitor Arduino Elegante</title>
 
-    <!-- Fuentes / Iconos / Chart -->
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        :root {
-            --primary-color: #4caf50;
-            --secondary-color: #007bff;
-            --alert-color: #dc3545;
-            --bg-color: #eef2f6;
-            --card-bg-color: #ffffff;
-            --text-color: #34495e;
-            --light-text-color: #7f8c8d;
-            --border-color: #e0e0e0;
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-            margin: 0; padding: 20px; background-color: var(--bg-color);
-            color: var(--text-color); line-height: 1.6;
-            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
-        }
-        h1 {
-            font-family: 'Oswald', sans-serif; font-weight: 700; color: var(--primary-color);
-            text-align: center; margin-bottom: 30px; letter-spacing: 1.5px;
-        }
-        .container {
-            width: 100%; max-width: 1000px; background-color: var(--card-bg-color);
-            border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            padding: 30px; box-sizing: border-box;
-        }
-        .header-controls {
-            display: flex; justify-content: center; align-items: center; gap: 20px;
-            margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);
-        }
-        button {
-            padding: 12px 25px; font-size: 1em; font-weight: 600; cursor: pointer;
-            background-color: var(--secondary-color); color: #fff; border: none; border-radius: 6px;
-            transition: background-color .3s ease, transform .2s ease;
-            box-shadow: 0 4px 10px rgba(0,123,255,.2);
-        }
-        button:hover { background-color: #0056b3; transform: translateY(-2px); }
-        button:active { transform: translateY(0); box-shadow: 0 2px 5px rgba(0,0,0,.2); }
-        button:disabled { opacity: .6; cursor: not-allowed; }
-
-        #status { font-size: 1.1em; color: var(--light-text-color); text-align: center; }
-
-        .data-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px; margin-top: 30px;
-        }
-        .data-card {
-            background-color: var(--bg-color); border-radius: 10px; padding: 20px; text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,.08); transition: transform .3s ease;
-        }
-        .data-card:hover { transform: translateY(-5px); }
-        .data-card i { font-size: 2.5em; color: var(--primary-color); margin-bottom: 10px; }
-        .data-card h3 { font-family: 'Oswald', sans-serif; margin: 0 0 5px; font-weight: 400; }
-        .data-card .value { font-family: 'Oswald', sans-serif; font-size: 2.2em; font-weight: 700; color: var(--primary-color); }
-
-        #alertData.alerta {
-            color: #fff; background-color: var(--alert-color);
-            padding: 8px 15px; border-radius: 5px; font-weight: bold; display: inline-block;
-        }
-        #alertData.ok {
-            color: var(--primary-color); font-weight: bold; padding: 8px 0; display: inline-block;
-        }
-
-        #tempChartContainer {
-            margin-top: 40px; padding: 20px; background-color: var(--card-bg-color);
-            border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,.1);
-        }
-        #tempChart { max-height: 350px; width: 100% !important; }
-
-        #rawDataDisplay {
-            margin-top: 40px; padding: 15px;
-            background-color: #2c3e50; color: #ecf0f1; border-radius: 8px;
-            font-family: 'Courier New', monospace; font-size: .9em; height: 150px;
-            overflow-y: auto; white-space: pre-wrap; border: 1px solid #1a242f;
-        }
-    </style>
+  <style>
+    :root { --primary-color:#4caf50; --secondary-color:#007bff; --alert-color:#dc3545; --bg-color:#eef2f6; --card-bg-color:#ffffff; --text-color:#34495e; --light-text-color:#7f8c8d; --border-color:#e0e0e0; }
+    body{font-family:'Poppins',sans-serif;margin:0;padding:20px;background-color:var(--bg-color);color:var(--text-color);line-height:1.6;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+    h1{font-family:'Oswald',sans-serif;font-weight:700;color:var(--primary-color);text-align:center;margin-bottom:30px;letter-spacing:1.5px;}
+    .container{width:100%;max-width:1000px;background-color:var(--card-bg-color);border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.1);padding:30px;box-sizing:border-box;}
+    .header-controls{display:flex;justify-content:center;align-items:center;gap:20px;margin-bottom:30px;padding-bottom:20px;border-bottom:1px solid var(--border-color);}
+    #status{font-size:1.1em;color:var(--light-text-color);text-align:center;}
+    .data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:25px;margin-top:30px;}
+    .data-card{background-color:var(--bg-color);border-radius:10px;padding:20px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,.08);transition:transform .3s ease;}
+    .data-card:hover{transform:translateY(-5px);}
+    .data-card i{font-size:2.5em;color:var(--primary-color);margin-bottom:10px;}
+    .data-card h3{font-family:'Oswald',sans-serif;margin:0 0 5px;font-weight:400;}
+    .data-card .value{font-family:'Oswald',sans-serif;font-size:2.2em;font-weight:700;color:var(--primary-color);}
+    #alertData.alerta{color:#fff;background-color:var(--alert-color);padding:8px 15px;border-radius:5px;font-weight:bold;display:inline-block;}
+    #alertData.ok{color:var(--primary-color);font-weight:bold;padding:8px 0;display:inline-block;}
+    #tempChartContainer{margin-top:40px;padding:20px;background-color:var(--card-bg-color);border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.1);}
+    #tempChart{max-height:350px;width:100% !important;}
+    #rawDataDisplay{margin-top:40px;padding:15px;background-color:#2c3e50;color:#ecf0f1;border-radius:8px;font-family:'Courier New',monospace;font-size:.9em;height:150px;overflow-y:auto;white-space:pre-wrap;border:1px solid #1a242f;}
+  </style>
 </head>
 <body>
+  <h1><i class="fas fa-microchip"></i> Monitor de Arduino <i class="fas fa-thermometer-half"></i></h1>
 
-    <h1><i class="fas fa-microchip"></i> Monitor de Arduino <i class="fas fa-thermometer-half"></i></h1>
-
-    <div class="container">
-        <div class="header-controls">
-            <button id="connectButton"><i class="fas fa-plug"></i> Conectar a Arduino</button>
-            <p id="status"><i class="fas fa-times-circle"></i> Desconectado.</p>
-        </div>
-
-        <div class="data-grid">
-            <div class="data-card">
-                <i class="fas fa-thermometer-half"></i>
-                <h3>Temperatura</h3>
-                <p class="value"><span id="tempData">--</span> °C</p>
-            </div>
-            <div class="data-card">
-                <i class="fas fa-ruler-horizontal"></i>
-                <h3>Distancia</h3>
-                <p class="value"><span id="distData">--</span> cm</p>
-            </div>
-            <div class="data-card">
-                <i class="fas fa-exclamation-circle"></i>
-                <h3>Estado</h3>
-                <p class="value"><span id="alertData">--</span></p>
-            </div>
-        </div>
-
-        <div id="tempChartContainer">
-            <h2><i class="fas fa-chart-line"></i> Historial de Temperatura</h2>
-            <canvas id="tempChart"></canvas>
-        </div>
-
-        <h2 style="margin-top: 40px; text-align: center;"><i class="fas fa-code"></i> Datos Crudos Seriales</h2>
-        <div id="rawDataDisplay">Esperando datos...</div>
+  <div class="container">
+    <div class="header-controls">
+      <p id="status"><i class="fas fa-sync-alt"></i> Conectando a Firebase...</p>
     </div>
 
-    <!-- Firebase v8 (ligero y suficiente para Realtime DB) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <div class="data-grid">
+      <div class="data-card">
+        <i class="fas fa-thermometer-half"></i>
+        <h3>Temperatura</h3>
+        <p class="value"><span id="tempData">--</span> °C</p>
+      </div>
+      <div class="data-card">
+        <i class="fas fa-ruler-horizontal"></i>
+        <h3>Distancia</h3>
+        <p class="value"><span id="distData">--</span> cm</p>
+      </div>
+      <div class="data-card">
+        <i class="fas fa-exclamation-circle"></i>
+        <h3>Estado</h3>
+        <p class="value"><span id="alertData">--</span></p>
+      </div>
+    </div>
 
-    <script>
-        // ====== Estado / refs ======
-        let port = null;
-        let reader = null;
+    <div id="tempChartContainer">
+      <h2><i class="fas fa-chart-line"></i> Historial de Temperatura</h2>
+      <canvas id="tempChart"></canvas>
+    </div>
 
-        const connectButton   = document.getElementById('connectButton');
-        const statusElement   = document.getElementById('status');
-        const tempDataElement = document.getElementById('tempData');
-        const distDataElement = document.getElementById('distData');
-        const alertDataElement= document.getElementById('alertData');
-        const rawDataDisplay  = document.getElementById('rawDataDisplay');
+    <h2 style="margin-top: 40px; text-align: center;"><i class="fas fa-code"></i> Datos Crudos</h2>
+    <div id="rawDataDisplay">Esperando datos...</div>
+  </div>
 
-        // ====== Chart.js ======
-        let chartData = {
-            labels: [],
-            datasets: [{
-                label: 'Temperatura (°C)',
-                data: [],
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderWidth: 2, tension: 0.3, fill: true
-            }]
-        };
-        let tempChart;
-        window.onload = function () {
-            const ctx = document.getElementById('tempChart').getContext('2d');
-            tempChart = new Chart(ctx, {
-                type: 'line',
-                data: chartData,
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: {
-                        x: { beginAtZero: false, title: { display: true, text: 'Tiempo' } },
-                        y: { beginAtZero: false, title: { display: true, text: 'Temperatura (°C)' } }
-                    }
-                }
-            });
-        };
+  <!-- Firebase (Realtime DB) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-        function setUIConnected(connected) {
-            if (connected) {
-                statusElement.innerHTML = '<i class="fas fa-check-circle"></i> Conectado. Esperando datos...';
-                connectButton.innerHTML = '<i class="fas fa-times-circle"></i> Desconectar';
-            } else {
-                statusElement.innerHTML = '<i class="fas fa-times-circle"></i> Desconectado.';
-                connectButton.innerHTML = '<i class="fas fa-plug"></i> Conectar a Arduino';
-            }
-        }
+  <script>
+    const tempDataElement = document.getElementById('tempData');
+    const distDataElement = document.getElementById('distData');
+    const alertDataElement= document.getElementById('alertData');
+    const rawDataDisplay  = document.getElementById('rawDataDisplay');
+    const statusElement   = document.getElementById('status');
 
-        // =========================
-        //  A) Lectura desde Firebase
-        // =========================
-        (function initFirebase() {
-            const firebaseConfig = {
-                databaseURL: "https://sensores2-dec96-default-rtdb.firebaseio.com/"
-            };
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.database();
+    // Chart.js
+    let chartData = { labels: [], datasets: [{ label:'Temperatura (°C)', data:[], borderColor:'rgba(75, 192, 192, 1)', backgroundColor:'rgba(75, 192, 192, 0.2)', borderWidth:2, tension:0.3, fill:true }]};
+    let tempChart;
+    window.onload = function(){
+      const ctx = document.getElementById('tempChart').getContext('2d');
+      tempChart = new Chart(ctx,{ type:'line', data:chartData, options:{ responsive:true, maintainAspectRatio:false,
+        scales:{ x:{ title:{display:true,text:'Tiempo'} }, y:{ title:{display:true,text:'Temperatura (°C)'} } } }});
+    };
 
-            const ref = db.ref("telemetria/current");
-            statusElement.innerHTML = '<i class="fas fa-sync-alt"></i> Conectando a Firebase...';
+    function updateChart(newTemp){
+      const maxPts = 20, t = new Date().toLocaleTimeString();
+      if(chartData.labels.length >= maxPts){ chartData.labels.shift(); chartData.datasets[0].data.shift(); }
+      chartData.labels.push(t); chartData.datasets[0].data.push(newTemp);
+      tempChart && tempChart.update();
+    }
 
-            ref.on("value", (snap) => {
-                const v = snap.val() || {};
-                // Actualizar tarjetas
-                if (v.temp != null) tempDataElement.textContent = Number(v.temp).toFixed(1);
-                if (v.dist_suav != null) distDataElement.textContent = String(v.dist_suav);
-                else if (v.dist != null) distDataElement.textContent = String(v.dist);
-                alertDataElement.textContent = v.alerta ?? '--';
-                alertDataElement.className = (/ALERTA/i.test(alertDataElement.textContent)) ? 'alerta' : 'ok';
+    // Firebase: escuchar telemetria/current
+    (function initFirebase(){
+      firebase.initializeApp({ databaseURL: "https://sensores2-dec96-default-rtdb.firebaseio.com/" });
+      const db = firebase.database();
+      const ref = db.ref("telemetria/current");
 
-                // Historial de temperatura
-                if (v.temp != null) updateChart(Number(v.temp));
+      ref.on("value", (snap)=>{
+        const v = snap.val() || {};
+        if (v.temp != null){ tempDataElement.textContent = Number(v.temp).toFixed(1); updateChart(Number(v.temp)); }
+        if (v.dist_suav != null) distDataElement.textContent = String(v.dist_suav);
+        else if (v.dist != null) distDataElement.textContent = String(v.dist);
+        alertDataElement.textContent = v.alerta ?? "--";
+        alertDataElement.className = (/ALERTA/i.test(alertDataElement.textContent)) ? "alerta" : "ok";
 
-                // Log crudo
-                const t = v.timestamp ? new Date(v.timestamp*1000).toLocaleTimeString() : new Date().toLocaleTimeString();
-                rawDataDisplay.textContent += `[Firebase ${t}] temp=${v.temp ?? '--'} dist=${v.dist_suav ?? v.dist ?? '--'} alerta=${v.alerta ?? '--'}\n`;
-                rawDataDisplay.scrollTop = rawDataDisplay.scrollHeight;
+        const t = v.timestamp ? new Date(v.timestamp*1000).toLocaleTimeString() : new Date().toLocaleTimeString();
+        rawDataDisplay.textContent += `[Firebase ${t}] temp=${v.temp ?? '--'} dist=${v.dist_suav ?? v.dist ?? '--'} alerta=${v.alerta ?? '--'}\n`;
+        rawDataDisplay.scrollTop = rawDataDisplay.scrollHeight;
 
-                // Estado
-                statusElement.innerHTML = '<i class="fas fa-cloud"></i> Recibiendo datos desde Firebase.';
-            }, (err) => {
-                statusElement.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error Firebase: ' + err.message;
-            });
-        })();
-
-        // ======================================
-        //  B) (Opcional) Web Serial local (igual)
-        // ======================================
-        connectButton.addEventListener('click', async () => {
-            connectButton.disabled = true;
-            try {
-                if (port) { await disconnect(); }
-                else      { await connect(); }
-            } finally { connectButton.disabled = false; }
-        });
-
-        async function connect() {
-            try {
-                if (!('serial' in navigator)) {
-                    statusElement.innerHTML = '<i class="fas fa-exclamation-circle"></i> Este navegador no soporta Web Serial. Usa Chrome/Edge.';
-                    return;
-                }
-                port = await navigator.serial.requestPort();
-                await port.open({ baudRate: 9600 });
-                setUIConnected(true);
-                readData().catch(err => console.error(err));
-            } catch (error) {
-                statusElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> Error: ${error.message}`;
-                setUIConnected(false);
-                port = null;
-            }
-        }
-
-        async function disconnect() {
-            try {
-                if (reader) { try { await reader.cancel(); } catch (_) {} reader.releaseLock(); reader = null; }
-                if (port)   { try { await port.close();  } catch (_) {} port = null; }
-            } finally { setUIConnected(false); }
-        }
-
-        async function readData() {
-            const textDecoder = new TextDecoderStream();
-            port.readable.pipeTo(textDecoder.writable).catch(() => {});
-            reader = textDecoder.readable.getReader();
-
-            let buffer = '';
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
-                if (value) {
-                    buffer += value;
-                    const lines = buffer.split(/\r?\n/); buffer = lines.pop();
-                    for (const lineRaw of lines) {
-                        const line = lineRaw.trim();
-                        if (!line) continue;
-                        rawDataDisplay.textContent += line + '\n';
-                        rawDataDisplay.scrollTop = rawDataDisplay.scrollHeight;
-                        processLine(line);
-                    }
-                }
-            }
-        }
-
-        function processLine(line) {
-            const parts = line.split('|').map(p => p.trim());
-            if (parts.length >= 3) {
-                const tempStr = parts[0].replace('C','').trim();
-                const distStr = parts[1].replace('cm','').trim();
-                const alerta  = parts[2];
-                const temp = parseFloat(tempStr);
-                const dist = parseInt(distStr, 10);
-
-                if (!Number.isNaN(temp)) { tempDataElement.textContent = temp.toFixed(1); updateChart(temp); }
-                else { tempDataElement.textContent = '--'; }
-                if (!Number.isNaN(dist)) distDataElement.textContent = String(dist);
-                else distDataElement.textContent = '--';
-
-                alertDataElement.textContent = alerta;
-                alertDataElement.className = (/ALERTA ACTIVA/i.test(alerta)) ? 'alerta' : 'ok';
-            }
-        }
-
-        function updateChart(newTemp) {
-            const maxDataPoints = 20;
-            const currentTime = new Date().toLocaleTimeString();
-            if (chartData.labels.length >= maxDataPoints) { chartData.labels.shift(); chartData.datasets[0].data.shift(); }
-            chartData.labels.push(currentTime);
-            chartData.datasets[0].data.push(newTemp);
-            if (tempChart) tempChart.update();
-        }
-
-        if ('serial' in navigator) {
-            navigator.serial.addEventListener('disconnect', async () => {
-                await disconnect();
-                statusElement.innerHTML = '<i class="fas fa-exclamation-circle"></i> El dispositivo se desconectó.';
-            });
-        }
-    </script>
+        statusElement.innerHTML = '<i class="fas fa-cloud"></i> Recibiendo datos desde Firebase.';
+      }, (err)=>{
+        statusElement.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error Firebase: ' + err.message;
+      });
+    })();
+  </script>
 </body>
 </html>
